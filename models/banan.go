@@ -6,5 +6,5 @@ type BanAn struct {
 	SoChoNgoi int
 	TrangThai string
 	AnhBan    string
-	AnhHor    string
+	Anh_QR    string
 }

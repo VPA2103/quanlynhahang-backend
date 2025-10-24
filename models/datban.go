@@ -7,8 +7,11 @@ type DatBan struct {
 	TenKhachHang string
 	SDT          string
 	GhiChu       string
-	MaBan        string
+	MaBanAn      string
 	NgayDatBan   time.Time
 	GioDatBan    string
 	TrangThai    string
+
+	MaNhanVien string   `gorm:"size:10"` // foreign key
+	NhanVien   NhanVien `gorm:"foreignKey:MaNhanVien;references:MaNV"`
 }

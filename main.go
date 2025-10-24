@@ -31,5 +31,18 @@ func main() {
 		})
 	})
 
+	// Public routes
+	//r.POST("/login", loginHandler)
+	//
+	//// Protected routes
+	//auth := r.Group("/api")
+	//auth.Use(middleware.AuthMiddleware())
+	//
+	//auth.GET("/profile", getProfile)
+	//
+	//authAdmin := auth.Group("/admin")
+	//authAdmin.Use(middleware.RoleMiddleware("admin"))
+	//authAdmin.GET("/dashboard", adminDashboard)
+
 	r.Run(":8080") // chạy ở port 8080
 }
