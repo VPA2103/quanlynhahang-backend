@@ -5,53 +5,36 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/vpa/quanlynhahang-backend/utils"
 )
 
-// Middleware kiểm tra JWT token
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid Authorization header"})
 			c.Abort()
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		claims, err := utils.ParseToken(tokenString)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+
+		claims := &utils.JWTClaims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return utils.SecretKey(), nil
+		})
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		// Lưu thông tin vào context
+		// Lưu thông tin user vào context
 		c.Set("user_id", claims.UserID)
+		c.Set("username", claims.Username)
 		c.Set("role", claims.Role)
+
 		c.Next()
-	}
-}
-
-// Middleware kiểm tra quyền (role)
-func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		role, exists := c.Get("role")
-		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"error": "No role info"})
-			c.Abort()
-			return
-		}
-
-		userRole := role.(string)
-		for _, allowed := range allowedRoles {
-			if userRole == allowed {
-				c.Next()
-				return
-			}
-		}
-
-		c.JSON(http.StatusForbidden, gin.H{"error": "Permission denied"})
-		c.Abort()
 	}
 }
