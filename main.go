@@ -45,5 +45,5 @@ func main() {
 	r.POST("/register", handlers.Register)
 	r.POST("/login", handlers.Login)
 
-	r.Run(":8080") // chạy ở port 8080
+	r.Run(":3000") // chạy ở port 3000
 }
