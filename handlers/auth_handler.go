@@ -12,7 +12,7 @@ import (
 
 func Login(c *gin.Context) {
 	var input struct {
-		Username string `json:"username"`
+		Email    string `json:"email" binding:"required"`
 		Password string `json:"password"`
 	}
 
@@ -21,8 +21,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	var user models.NhanVien
-	if err := config.DB.Where("ten_dang_nhap = ?", input.Username).First(&user).Error; err != nil {
+	var user models.KhachHang
+	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
 
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
@@ -35,7 +35,8 @@ func Login(c *gin.Context) {
 	}
 
 	// Tạo JWT token
-	token, err := utils.GenerateToken(user.MaNV, user.HoTen, user.LoaiNhanVien)
+	token, err := utils.GenerateToken(user.MaKH, user.HoTen)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -49,9 +50,11 @@ func Login(c *gin.Context) {
 
 func Register(c *gin.Context) {
 	var input struct {
-		Username string `json:"username"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
-		Role     string `json:"role"`
+		SDT      string `json:"sdt"`
+		//Role     string `json:"role"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -62,10 +65,12 @@ func Register(c *gin.Context) {
 	// Mã hoá mật khẩu
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(input.Password), 10)
 
-	user := models.NhanVien{
-		TenDangNhap:  input.Username,
-		MatKhau:      string(hashed),
-		LoaiNhanVien: input.Role,
+	user := models.KhachHang{
+		HoTen:   input.Name,
+		Email:   input.Email,
+		MatKhau: string(hashed),
+		SDT:     input.SDT,
+		//LoaiNhanVien: input.Role,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
