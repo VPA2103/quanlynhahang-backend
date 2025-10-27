@@ -12,18 +12,17 @@ import (
 
 func Login(c *gin.Context) {
 	var input struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password"`
+		Email    string `form:"email" json:"email" binding:"required"`
+		Password string `form:"password" json:"password" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
 	var user models.KhachHang
 	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
@@ -50,11 +49,10 @@ func Login(c *gin.Context) {
 
 func Register(c *gin.Context) {
 	var input struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		SDT      string `json:"sdt"`
-		//Role     string `json:"role"`
+		Name     string `form:"name" json:"name" binding:"required"`
+		Email    string `form:"email" json:"email" binding:"required"`
+		Password string `form:"password" json:"password" binding:"required"`
+		SDT      string `form:"sdt" json:"sdt"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {

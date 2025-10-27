@@ -7,7 +7,7 @@ type KhachHang struct {
 	NgaySinh     string `json:"ngay_sinh"`
 	DiaChi       string `json:"dia_chi"`
 	Email        string `json:"email"`
-	MatKhau      string `json:"mat_khau"`
+	MatKhau      string `json:"-"`
 	AnhKhachHang string `json:"anh_khach_hang"`
 	SDT          string `json:"sdt"`
 }
