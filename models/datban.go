@@ -3,7 +3,7 @@ package models
 import "time"
 
 type DatBan struct {
-	MaDatBan     string `gorm:"primaryKey;size:10"`
+	MaDatBan     uint `gorm:"primaryKey;size:10;autoIncrement"`
 	TenKhachHang string
 	SDT          string
 	GhiChu       string
@@ -12,6 +12,6 @@ type DatBan struct {
 	GioDatBan    string
 	TrangThai    string
 
-	MaNhanVien string   `gorm:"size:10"` // foreign key
+	MaNhanVien uint     `gorm:"size:10"` // foreign key
 	NhanVien   NhanVien `gorm:"foreignKey:MaNhanVien;references:MaNV"`
 }

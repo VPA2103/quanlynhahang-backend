@@ -3,7 +3,7 @@ package models
 import "time"
 
 type NhanVien struct {
-	MaNV         string `gorm:"primaryKey;size:10"`
+	MaNV         uint `gorm:"primaryKey;size:10;autoIncrement"`
 	HoTen        string
 	GioiTinh     string
 	NgaySinh     time.Time

@@ -3,7 +3,7 @@ package models
 import "time"
 
 type HoaDon struct {
-	MaHD      string `gorm:"primaryKey;size:10"`
+	MaHD      string `gorm:"primaryKey;size:10;autoIncrement"`
 	MaBan     string `gorm:"size:10"`
 	NgayLap   time.Time
 	GioLap    string

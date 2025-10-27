@@ -2,81 +2,122 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/utils"
+	//"github.com/vpa/quanlynhahang-backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var jwtSecret = []byte(os.Getenv("SECRET_KEY"))
+
+// Struct cho request login
+type LoginInput struct {
+	Email    string `json:"email" form:"email" binding:"required"`
+	Password string `json:"password" form:"password" binding:"required"`
+}
+
 func Login(c *gin.Context) {
-	var input struct {
-		Email    string `form:"email" json:"email" binding:"required"`
-		Password string `form:"password" json:"password" binding:"required"`
-	}
-
+	var input LoginInput
 	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập email và mật khẩu"})
 		return
 	}
 
-	var user models.KhachHang
-	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+	// =========================
+	// ✅ Check khách hàng trước
+	// =========================
+	var kh models.KhachHang
+	if err := config.DB.Where("email = ?", input.Email).First(&kh).Error; err == nil {
+		// So sánh mật khẩu (đã mã hoá)
+		if err := bcrypt.CompareHashAndPassword([]byte(kh.MatKhau), []byte(input.Password)); err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu không đúng"})
+			return
+		}
+
+		// Tạo token
+		token, err := generateToken(kh.MaKH, kh.Email, "guest")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "Đăng nhập thành công",
+			"role":     "guest",
+			"redirect": "/account",
+			"token":    token,
+			"user": gin.H{
+				"id":    kh.MaKH,
+				"hoten": kh.HoTen,
+				"email": kh.Email,
+				"sdt":   kh.SDT,
+			},
+		})
 		return
 	}
 
-	// So sánh password (hash)
-	if err := bcrypt.CompareHashAndPassword([]byte(user.MatKhau), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
+	// =========================
+	// ✅ Check nhân viên
+	// =========================
+	var nv models.NhanVien
+	if err := config.DB.Where("email = ?", input.Email).First(&nv).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email không tồn tại"})
 		return
 	}
 
-	// Tạo JWT token
-	token, err := utils.GenerateToken(user.MaKH, user.HoTen)
+	// Nếu mật khẩu không được mã hoá thì so sánh trực tiếp
+	// Nếu đã mã hoá thì dùng bcrypt.CompareHashAndPassword
+	if bcrypt.CompareHashAndPassword([]byte(nv.MatKhau), []byte(input.Password)) != nil &&
+		nv.MatKhau != input.Password {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu không đúng"})
+		return
+	}
 
+	redirect := "/account"
+	if nv.LoaiNhanVien == "admin" {
+		redirect = "/admin"
+	} else if nv.LoaiNhanVien == "user" {
+		redirect = "/user/home"
+	}
+
+	token, err := generateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"token":   token,
+		"message":  "Đăng nhập thành công",
+		"role":     nv.LoaiNhanVien,
+		"redirect": redirect,
+		"token":    token,
+		"user": gin.H{
+			"ma_nv":        nv.MaNV,
+			"hoten":        nv.HoTen,
+			"email":        nv.Email,
+			"loainhanvien": nv.LoaiNhanVien,
+		},
 	})
 }
 
-func Register(c *gin.Context) {
-	var input struct {
-		Name     string `form:"name" json:"name" binding:"required"`
-		Email    string `form:"email" json:"email" binding:"required"`
-		Password string `form:"password" json:"password" binding:"required"`
-		SDT      string `form:"sdt" json:"sdt"`
+// ======================================
+// ✅ Hàm tạo token JWT
+// ======================================
+func generateToken(id uint, email string, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"id":    id,
+		"email": email,
+		"role":  role,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-
-	// Mã hoá mật khẩu
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(input.Password), 10)
-
-	user := models.KhachHang{
-		HoTen:   input.Name,
-		Email:   input.Email,
-		MatKhau: string(hashed),
-		SDT:     input.SDT,
-		//LoaiNhanVien: input.Role,
-	}
-
-	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User registered"})
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
 }
 
 // Handler admin
@@ -86,4 +127,72 @@ func AdminDashboard(c *gin.Context) {
 
 func GetProfile(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "User profile"})
+}
+
+func Register(c *gin.Context) {
+	var input struct {
+		HoTen   string `json:"name" form:"name" binding:"required"`
+		Email   string `json:"email" form:"email" binding:"required,email"`
+		MatKhau string `json:"password" form:"password" binding:"required"`
+		SDT     string `json:"sdt" form:"sdt"`
+	}
+
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập đầy đủ thông tin"})
+		return
+	}
+
+	// ✅ Kiểm tra trùng email (ở cả khách hàng & nhân viên)
+	var existingKH models.KhachHang
+	if err := config.DB.Where("email = ?", input.Email).First(&existingKH).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
+		return
+	}
+
+	var existingNV models.NhanVien
+	if err := config.DB.Where("email = ?", input.Email).First(&existingNV).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
+		return
+	}
+
+	// ✅ Mã hoá mật khẩu
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.MatKhau), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hoá mật khẩu"})
+		return
+	}
+
+	// ✅ Tạo khách hàng mới
+	newKH := models.KhachHang{
+		HoTen:   input.HoTen,
+		Email:   input.Email,
+		MatKhau: string(hashedPassword),
+		SDT:     input.SDT,
+	}
+
+	if err := config.DB.Create(&newKH).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo tài khoản"})
+		return
+	}
+
+	// ✅ Tạo JWT token
+	token, err := generateToken(newKH.MaKH, newKH.Email, "guest")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
+		return
+	}
+
+	// ✅ Trả về kết quả
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Đăng ký thành công",
+		"role":     "guest",
+		"redirect": "/account",
+		"token":    token,
+		"user": gin.H{
+			"id":    newKH.MaKH,
+			"hoten": newKH.HoTen,
+			"email": newKH.Email,
+			"sdt":   newKH.SDT,
+		},
+	})
 }
