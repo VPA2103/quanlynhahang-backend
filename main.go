@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/handlers"
+	"github.com/vpa/quanlynhahang-backend/middleware"
 	"github.com/vpa/quanlynhahang-backend/models"
 )
 
@@ -30,6 +32,18 @@ func main() {
 			"message": "Hello Gin!",
 		})
 	})
+
+	auth := r.Group("/api")
+	auth.Use(middleware.AuthMiddleware()) // Kiểm tra token JWT
+
+	auth.GET("/profile", handlers.GetProfile) // Bất kỳ user nào có token đều xem được
+
+	admin := auth.Group("/admin")
+	admin.Use(middleware.RoleMiddleware("admin")) // Chỉ admin mới truy cập
+	admin.GET("/dashboard", handlers.AdminDashboard)
+
+	r.POST("/register", handlers.Register)
+	r.POST("/login", handlers.Login)
 
 	r.Run(":8080") // chạy ở port 8080
 }

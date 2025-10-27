@@ -4,9 +4,12 @@ import "time"
 
 type ThanhToan struct {
 	MaThanhToan       string `gorm:"primaryKey;size:10"`
-	MaHD              string
+	MaHD              string `gorm:"size:10"`
 	SoTien            float64
 	HinhThucThanhToan string
 	NgayThanhToan     time.Time
-	GioThanhToan      string
+	GioThanhToan      time.Time
+
+	MaNVThanhToan     string   `gorm:"size:10"` // foreign key
+	NhanVienThanhToan NhanVien `gorm:"foreignKey:MaNVThanhToan;references:MaNV"`
 }

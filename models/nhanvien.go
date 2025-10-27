@@ -8,6 +8,7 @@ type NhanVien struct {
 	GioiTinh     string
 	NgaySinh     time.Time
 	SDT          string
+	TenDangNhap  string
 	DiaChi       string
 	NgayVaoLam   time.Time
 	Email        string
