@@ -1,7 +1,7 @@
 package models
 
 type Contact struct {
-	MaLienHe     string `gorm:"primaryKey;size:10"`
+	MaLienHe     string `gorm:"primaryKey;size:10;autoIncrement"`
 	TenKhachHang string
 	SDT          string
 	Email        string

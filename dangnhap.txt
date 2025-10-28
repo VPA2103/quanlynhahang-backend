@@ -1,0 +1,61 @@
+login: async (email, matkhau) => {
+    if (!email || !matkhau) throw new Error("Vui lòng nhập email và mật khẩu");
+
+    // ✅ Check khách hàng
+    const [khRows] = await db.promise().query("SELECT * FROM khachhang WHERE EMAIL = ?", [email]);
+    if (khRows.length > 0) {
+      const kh = khRows[0];
+      const isMatch = await bcrypt.compare(matkhau, kh.MATKHAU);
+      if (!isMatch) throw new Error("Mật khẩu không đúng");
+
+      // Tạo token
+      const token = jwt.sign(
+        { id: kh.MA_KH, email: kh.EMAIL, role: "guest" },
+        SECRET_KEY,
+        { expiresIn: "1d" }
+      );
+
+      return {
+        message: "Đăng nhập thành công",
+        role: "guest",
+        redirect: "/account",
+        token,
+        user: {
+          id: kh.MA_KH,
+          hoten: kh.HOTEN,
+          email: kh.EMAIL,
+          sdt: kh.SDT,
+        },
+      };
+    }
+
+    // ✅ Check nhân viên
+    const [nvRows] = await db.promise().query("SELECT * FROM nhanvien WHERE EMAIL = ?", [email]);
+    if (nvRows.length === 0) throw new Error("Email không tồn tại");
+
+    const nv = nvRows[0];
+    if (matkhau !== nv.MATKHAU) throw new Error("Mật khẩu không đúng");
+
+    let redirect = "/account";
+    if (nv.LOAINHANVIEN === "admin") redirect = "/admin";
+    else if (nv.LOAINHANVIEN === "user") redirect = "/user/home";
+
+    const token = jwt.sign(
+      { id: nv.MA_NV, email: nv.EMAIL, role: nv.LOAINHANVIEN },
+      SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
+    return {
+      message: "Đăng nhập thành công",
+      role: nv.LOAINHANVIEN,
+      redirect,
+      token,
+      user: {
+        MA_NV: nv.MA_NV,
+        HOTEN: nv.HOTEN,
+        EMAIL: nv.EMAIL,
+        LOAINHANVIEN: nv.LOAINHANVIEN,
+      },
+    };
+  },
