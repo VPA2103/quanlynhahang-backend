@@ -13,6 +13,5 @@ func NhanVienRoutes(r *gin.Engine) {
 		nhanvien.GET("/:id", handlers.GetNhanVienByID)
 		nhanvien.PUT("/:id", handlers.UpdateNhanVien)
 		nhanvien.DELETE("/:id", handlers.DeleteNhanVien)
-		nhanvien.POST("/change-password", handlers.ChangePasswordNhanVien)
 	}
 }
