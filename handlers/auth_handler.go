@@ -120,15 +120,6 @@ func generateToken(id uint, email string, role string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// Handler admin
-func AdminDashboard(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Welcome Admin Dashboard"})
-}
-
-func GetProfile(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "User profile"})
-}
-
 func Register(c *gin.Context) {
 	var input struct {
 		HoTen   string `json:"name" form:"name" binding:"required"`
@@ -142,27 +133,25 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// ✅ Kiểm tra trùng email (ở cả khách hàng & nhân viên)
+	// Kiểm tra trùng email
 	var existingKH models.KhachHang
 	if err := config.DB.Where("email = ?", input.Email).First(&existingKH).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
 		return
 	}
-
 	var existingNV models.NhanVien
 	if err := config.DB.Where("email = ?", input.Email).First(&existingNV).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
 		return
 	}
 
-	// ✅ Mã hoá mật khẩu
+	// Mã hoá mật khẩu
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.MatKhau), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hoá mật khẩu"})
 		return
 	}
 
-	// ✅ Tạo khách hàng mới
 	newKH := models.KhachHang{
 		HoTen:   input.HoTen,
 		Email:   input.Email,
@@ -175,14 +164,12 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// ✅ Tạo JWT token
 	token, err := generateToken(newKH.MaKH, newKH.Email, "guest")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
 	}
 
-	// ✅ Trả về kết quả
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Đăng ký thành công",
 		"role":     "guest",
@@ -195,4 +182,13 @@ func Register(c *gin.Context) {
 			"sdt":   newKH.SDT,
 		},
 	})
+}
+
+// Handler admin
+func AdminDashboard(c *gin.Context) {
+	c.JSON(200, gin.H{"message": "Welcome Admin Dashboard"})
+}
+
+func GetProfile(c *gin.Context) {
+	c.JSON(200, gin.H{"message": "User profile"})
 }
