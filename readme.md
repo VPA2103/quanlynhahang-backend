@@ -10,7 +10,7 @@ DB_URL=postgres://postgres:123456@localhost:5432/my_database?sslmode=disable
 # 🌐 SERVER CONFIGURATION
 # =========================
 # Port để chạy server Gin
-PORT=8080
+PORT=3000
 
 # =========================
 # ⚙️ ENVIRONMENT SETTINGS

@@ -1,21 +1,27 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/handlers"
-	"github.com/vpa/quanlynhahang-backend/middleware"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/routes"
 )
 
 func main() {
 
+	// 🔧 Khởi tạo Gin
 	r := gin.Default()
+
+	// ⚙️ Cấu hình CORS
 	config.SetupCORS(r)
 
-	//
+	// 💾 Kết nối DB
 	config.ConnectDB()
-	config.DB.AutoMigrate(
+
+	// 🧱 Tự động migrate
+	err := config.DB.AutoMigrate(
 		&models.KhachHang{},
 		&models.BanAn{},
 		&models.MonAn{},
@@ -26,24 +32,15 @@ func main() {
 		&models.ChiTietHoaDon{},
 		&models.ThanhToan{},
 	)
+	if err != nil {
+		log.Fatalf("❌ Lỗi khi migrate DB: %v", err)
+	}
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello Gin!",
-		})
-	})
+	// 🚏 Đăng ký route
+	routes.SetupRoutes(r)
 
-	auth := r.Group("/api")
-	auth.Use(middleware.AuthMiddleware()) // Kiểm tra token JWT
-
-	auth.GET("/profile", handlers.GetProfile) // Bất kỳ user nào có token đều xem được
-
-	admin := auth.Group("/admin")
-	admin.Use(middleware.RoleMiddleware("admin")) // Chỉ admin mới truy cập
-	admin.GET("/dashboard", handlers.AdminDashboard)
-
-	r.POST("/register", handlers.Register)
-	r.POST("/login", handlers.Login)
-
-	r.Run(":3000") // chạy ở port 3000
+	// 🚀 Chạy server
+	if err := r.Run(":3000"); err != nil {
+		log.Fatalf("❌ Không thể khởi chạy server: %v", err)
+	}
 }

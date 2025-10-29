@@ -27,6 +27,7 @@ func ConnectDB() {
 
 	DB = db
 	fmt.Println("✅ Database connected successfully")
+
 }
 
 func SetupCORS(r *gin.Engine) {
