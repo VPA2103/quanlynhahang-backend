@@ -8,10 +8,11 @@ import (
 func NhanVienRoutes(r *gin.Engine) {
 	nhanvien := r.Group("/nhanvien")
 	{
-		nhanvien.POST("/", handlers.CreateNhanVien)
-		nhanvien.GET("/", handlers.GetAllNhanVien)
+		nhanvien.POST("/create", handlers.CreateNhanVien)
+		nhanvien.GET("/layTatCaNhanVien", handlers.GetAllNhanVien)
 		nhanvien.GET("/:id", handlers.GetNhanVienByID)
-		nhanvien.PUT("/:id", handlers.UpdateNhanVien)
-		nhanvien.DELETE("/:id", handlers.DeleteNhanVien)
+		nhanvien.PUT("/update/:id", handlers.UpdateNhanVien)
+		nhanvien.DELETE("/delete/:id", handlers.DeleteNhanVien)
+
 	}
 }

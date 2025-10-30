@@ -85,16 +85,16 @@ func UpdateNhanVien(c *gin.Context) {
 
 	// Struct tạm để nhận dữ liệu cập nhật (bao gồm cả đổi mật khẩu)
 	var req struct {
-		HoTen        string `json:"ho_ten" form:"ho_ten"`
-		GioiTinh     string `json:"gioi_tinh" form:"gioi_tinh"`
-		NgaySinh     string `json:"ngay_sinh" form:"ngay_sinh"`
-		SDT          string `json:"sdt" form:"sdt"`
-		DiaChi       string `json:"dia_chi" form:"dia_chi"`
-		Email        string `json:"email" form:"email"`
-		AnhNhanVien  string `json:"anh_nhan_vien" form:"anh_nhan_vien"`
-		LoaiNhanVien string `json:"loai_nhan_vien" form:"loai_nhan_vien"`
-		OldPassword  string `json:"old_password" form:"old_password"`
-		NewPassword  string `json:"new_password" form:"new_password"`
+		HoTen        string               `json:"ho_ten" form:"ho_ten"`
+		GioiTinh     string               `json:"gioi_tinh" form:"gioi_tinh"`
+		NgaySinh     string               `json:"ngay_sinh" form:"ngay_sinh"`
+		SDT          string               `json:"sdt" form:"sdt"`
+		DiaChi       string               `json:"dia_chi" form:"dia_chi"`
+		Email        string               `json:"email" form:"email"`
+		AnhNhanVien  models.ProductImages `json:"anh_nhan_vien" form:"anh_nhan_vien"`
+		LoaiNhanVien string               `json:"loai_nhan_vien" form:"loai_nhan_vien"`
+		OldPassword  string               `json:"old_password" form:"old_password"`
+		NewPassword  string               `json:"new_password" form:"new_password"`
 	}
 
 	if err := c.ShouldBind(&req); err != nil {
@@ -148,8 +148,8 @@ func UpdateNhanVien(c *gin.Context) {
 	if req.Email != "" {
 		nv.Email = req.Email
 	}
-	if req.AnhNhanVien != "" {
-		nv.AnhNhanVien = req.AnhNhanVien
+	if req.AnhNhanVien.ImageURL != "" {
+		nv.AnhNhanVien.ImageURL = req.AnhNhanVien.ImageURL
 	}
 	if req.LoaiNhanVien != "" {
 		nv.LoaiNhanVien = req.LoaiNhanVien

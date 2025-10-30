@@ -11,6 +11,8 @@ import (
 
 func main() {
 
+	// 💾 Kết nối Cloudinary
+	config.InitCloudinary()
 	// 🔧 Khởi tạo Gin
 	r := gin.Default()
 
@@ -38,6 +40,8 @@ func main() {
 
 	// 🚏 Đăng ký route
 	routes.SetupRoutes(r)
+
+	routes.UploadRoutes(r)
 
 	// 🚀 Chạy server
 	if err := r.Run(":3000"); err != nil {

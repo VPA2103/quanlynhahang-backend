@@ -10,6 +10,8 @@ type NhanVien struct {
 	NgayVaoLam   string `json:"ngay_vao_lam" form:"ngay_vao_lam"`
 	Email        string `json:"email" form:"email"`
 	MatKhau      string `json:"mat_khau" form:"mat_khau"`
-	AnhNhanVien  string `json:"anh_nhan_vien" form:"anh_nhan_vien"`
 	LoaiNhanVien string `json:"loai_nhan_vien" form:"loai_nhan_vien"`
+
+	// Quan hệ 1-1 với bảng ProductImages
+	AnhNhanVien ProductImages `gorm:"foreignKey:NhanvienID;constraint:OnDelete:CASCADE;" json:"anh_nhan_vien"`
 }
