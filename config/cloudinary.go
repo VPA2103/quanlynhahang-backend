@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -26,8 +27,9 @@ func InitCloudinary() {
 	)
 	if err != nil {
 		log.Fatal("Failed to initialize Cloudinary:", err)
+		return
 	}
-
+	fmt.Println("✅ Cloudinary connected successfully")
 	CLD = cld
 }
 

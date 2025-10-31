@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/vpa/quanlynhahang-backend/utils"
+	//"github.com/vpa/quanlynhahang-backend/utils"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -20,20 +21,31 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		claims := &utils.JWTClaims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			return utils.SecretKey(), nil
+		// ✅ Dùng utils.JWTSecret() để lấy key
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return utils.JWTSecret(), nil
 		})
+
 		if err != nil || !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		// Lưu thông tin user vào context
-		c.Set("user_id", claims.UserID)
-		c.Set("username", claims.Username)
-		//c.Set("role", claims.Role)
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		userID := uint(claims["id"].(float64))
+		username := claims["email"].(string)
+		role := claims["role"].(string)
+
+		c.Set("user_id", userID)
+		c.Set("username", username)
+		c.Set("role", role)
 
 		c.Next()
 	}

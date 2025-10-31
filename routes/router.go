@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/vpa/quanlynhahang-backend/handlers"
+	"github.com/vpa/quanlynhahang-backend/controllers"
 	"github.com/vpa/quanlynhahang-backend/middleware"
 )
 
@@ -13,19 +13,19 @@ func SetupRoutes(r *gin.Engine) {
 	})
 
 	// 🔐 Auth routes (không cần token)
-	r.POST("/register", handlers.Register)
-	r.POST("/login", handlers.Login)
+	r.POST("/register", controllers.Register)
+	r.POST("/login", controllers.Login)
 
 	// 🔒 Nhóm yêu cầu xác thực
 	auth := r.Group("/api")
 	auth.Use(middleware.AuthMiddleware())
 
-	auth.GET("/profile", handlers.GetProfile)
+	auth.GET("/profile", controllers.GetProfile)
 
 	// 👑 Nhóm chỉ cho admin
 	admin := auth.Group("/admin")
 	admin.Use(middleware.RoleMiddleware("admin"))
-	admin.GET("/dashboard", handlers.AdminDashboard)
+	admin.GET("/dashboard", controllers.AdminDashboard)
 
 	// 👨‍💼 Nhân viên routes (có thể để ngoài hoặc trong nhóm admin)
 	NhanVienRoutes(r)

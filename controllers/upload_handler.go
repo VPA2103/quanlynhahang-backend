@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"context"
@@ -39,8 +39,8 @@ func UploadHandler(c *gin.Context) {
 	})
 }
 
-func GetProductImage(c *gin.Context) {
-	var images models.ProductImages
+func GetImage(c *gin.Context) {
+	var images []models.Images
 	if err := config.DB.Find(&images).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get product images"})
 		return

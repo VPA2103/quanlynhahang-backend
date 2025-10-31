@@ -2,12 +2,12 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/vpa/quanlynhahang-backend/handlers"
+	"github.com/vpa/quanlynhahang-backend/controllers"
 )
 
 func UploadRoutes(route *gin.Engine) {
-	route.POST("/upload", handlers.UploadHandler)
-	route.GET("/images", handlers.GetProductImage)
+	route.POST("/upload", controllers.UploadHandler)
+	route.GET("/images", controllers.GetImage)
 	//route.GET("/images", controllers.GetProductImage)
 
 }

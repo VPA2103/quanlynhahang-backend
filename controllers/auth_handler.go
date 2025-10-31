@@ -1,19 +1,18 @@
-package handlers
+package controllers
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/utils"
+
 	//"github.com/vpa/quanlynhahang-backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var jwtSecret = []byte(os.Getenv("SECRET_KEY"))
 
 // Struct cho request login
 type LoginInput struct {
@@ -117,7 +116,7 @@ func generateToken(id uint, email string, role string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(utils.JWTSecret())
 }
 
 func Register(c *gin.Context) {
