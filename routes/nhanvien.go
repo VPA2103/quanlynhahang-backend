@@ -10,10 +10,13 @@ func NhanVienRoutes(r *gin.Engine) {
 	nhanvien := r.Group("/nhanvien")
 	{
 		nhanvien.POST("/create", controllers.CreateNhanVien)
-		nhanvien.GET("/layTatCaNhanVien", controllers.GetAllNhanVien)
+		nhanvien.GET("/layTatCa", controllers.GetAllNhanVien)
 		nhanvien.GET("/:id", controllers.GetNhanVienByID)
 		nhanvien.PUT("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
 		nhanvien.DELETE("/delete/:id", controllers.DeleteNhanVien)
+		nhanvien.PUT("/update-profile",
+			middleware.AuthMiddleware(),
+			controllers.UpdateOwnProfile)
 
 	}
 }
