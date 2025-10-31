@@ -13,5 +13,5 @@ type NhanVien struct {
 	LoaiNhanVien string `json:"loai_nhan_vien" form:"loai_nhan_vien"`
 
 	// ✅ Khai báo quan hệ 1-1 rõ ràng
-	AnhNhanVien []Images `gorm:"foreignKey:NhanvienID;references:MaNV" json:"anh_nhan_vien,omitempty"`
+	AnhNhanVien []Images `gorm:"polymorphic:Owner;polymorphicValue:nhan_vien" json:"anh_nhan_vien,omitempty"`
 }
