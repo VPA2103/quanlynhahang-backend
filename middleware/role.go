@@ -10,7 +10,7 @@ func RoleMiddleware(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleValue, exists := c.Get("role")
 		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Role not found"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Không tìm thấy quyền truy cập"})
 			c.Abort()
 			return
 		}
@@ -24,7 +24,7 @@ func RoleMiddleware(roles ...string) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "Không có quyền truy cập"})
 		c.Abort()
 	}
 }

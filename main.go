@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/routes"
@@ -11,6 +12,11 @@ import (
 
 func main() {
 
+	if err := godotenv.Load(); err != nil {
+		log.Println("⚠️  Không tìm thấy file .env, dùng SECRET_KEY mặc định")
+	}
+	// 💾 Kết nối Cloudinary
+	config.InitCloudinary()
 	// 🔧 Khởi tạo Gin
 	r := gin.Default()
 
@@ -28,6 +34,7 @@ func main() {
 		&models.LoaiMonAn{},
 		&models.DatBan{},
 		&models.NhanVien{},
+		&models.Images{},
 		&models.HoaDon{},
 		&models.ChiTietHoaDon{},
 		&models.ThanhToan{},
@@ -38,6 +45,8 @@ func main() {
 
 	// 🚏 Đăng ký route
 	routes.SetupRoutes(r)
+
+	routes.UploadRoutes(r)
 
 	// 🚀 Chạy server
 	if err := r.Run(":3000"); err != nil {

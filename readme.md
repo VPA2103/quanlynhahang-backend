@@ -17,3 +17,9 @@ PORT=3000
 # =========================
 # Chế độ chạy: development | production
 GIN_MODE=development
+# =========================
+# LẤY SECRET KEY
+# =========================
+# chạy lệnh trên cmd: openssl rand -hex 32
+# để lấy secret_key
+# =========================
