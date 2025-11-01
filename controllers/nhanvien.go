@@ -90,8 +90,8 @@ func GetAllNhanVien(c *gin.Context) {
 func GetNhanVienByID(c *gin.Context) {
 	id := c.Param("id")
 	var nv models.NhanVien
-	if err := config.DB.First(&nv, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
+	if err := config.DB.Preload("AnhNhanVien").Find(&nv, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, nv)
