@@ -50,12 +50,7 @@ func Login(c *gin.Context) {
 			"role":     "guest",
 			"redirect": "/account",
 			"token":    token,
-			"user": gin.H{
-				"id":    kh.MaKH,
-				"hoten": kh.HoTen,
-				"email": kh.Email,
-				"sdt":   kh.SDT,
-			},
+			"data":     kh,
 		})
 		return
 	}
@@ -95,12 +90,7 @@ func Login(c *gin.Context) {
 		"role":     nv.LoaiNhanVien,
 		"redirect": redirect,
 		"token":    token,
-		"user": gin.H{
-			"ma_nv":        nv.MaNV,
-			"hoten":        nv.HoTen,
-			"email":        nv.Email,
-			"loainhanvien": nv.LoaiNhanVien,
-		},
+		"data":     nv,
 	})
 }
 

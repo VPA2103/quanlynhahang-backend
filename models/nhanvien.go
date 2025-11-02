@@ -10,8 +10,7 @@ type NhanVien struct {
 	NgayVaoLam   string `json:"ngay_vao_lam" form:"ngay_vao_lam"`
 	Email        string `json:"email" form:"email"`
 	MatKhau      string `json:"mat_khau" form:"mat_khau"`
-	LoaiNhanVien string `json:"loai_nhan_vien" form:"loai_nhan_vien"`
-
+	LoaiNhanVien string `gorm:"type:text;not null" json:"loai_nhan_vien" form:"loai_nhan_vien"`
 	// ✅ Khai báo quan hệ 1-1 rõ ràng
 	AnhNhanVien []Images `gorm:"polymorphic:Owner;polymorphicValue:nhan_vien" json:"anh_nhan_vien,omitempty"`
 }
