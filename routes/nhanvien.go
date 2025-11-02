@@ -12,7 +12,11 @@ func NhanVienRoutes(r *gin.Engine) {
 		nhanvien.POST("/create", controllers.CreateNhanVien)
 		nhanvien.GET("/layTatCa", controllers.GetAllNhanVien)
 		nhanvien.GET("/:id", controllers.GetNhanVienByID)
+
 		nhanvien.PUT("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
+
+		nhanvien.PUT("/update/:id", controllers.UpdateNhanVien)
+
 		nhanvien.DELETE("/delete/:id", controllers.DeleteNhanVien)
 
 	}
