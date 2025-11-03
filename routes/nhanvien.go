@@ -15,8 +15,6 @@ func NhanVienRoutes(r *gin.Engine) {
 
 		nhanvien.PUT("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
 
-		nhanvien.PUT("/update/:id", controllers.UpdateNhanVien)
-
 		nhanvien.DELETE("/delete/:id", controllers.DeleteNhanVien)
 
 	}
