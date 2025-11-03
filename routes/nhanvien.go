@@ -9,13 +9,17 @@ import (
 func NhanVienRoutes(r *gin.Engine) {
 	nhanvien := r.Group("/nhanvien")
 	{
-		nhanvien.POST("/create", controllers.CreateNhanVien)
-		nhanvien.GET("/layTatCa", controllers.GetAllNhanVien)
-		nhanvien.GET("/:id", controllers.GetNhanVienByID)
 
+		// ✅ Chỉ admin được phép
+		nhanvien.POST("/create", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.CreateNhanVien)
 		nhanvien.PUT("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
+		nhanvien.DELETE("/delete/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.DeleteNhanVien)
 
-		nhanvien.DELETE("/delete/:id", controllers.DeleteNhanVien)
+		// ✅ Chỉ nhân viên được phép
+		nhanvien.PUT("/capNhatThongTinCaNhan/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("user"), controllers.UpdateThongTinCaNhan)
+
+		// ✅ Cả admin và user đều có thể xem danh sách
+		nhanvien.GET("/layTatCa", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "user"), controllers.GetAllNhanVien)
 
 	}
 }
