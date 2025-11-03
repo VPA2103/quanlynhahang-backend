@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -108,8 +109,8 @@ func UpdateNhanVien(c *gin.Context) {
 	id := c.Param("id")
 	var nv models.NhanVien
 
-	// 🔹 Lấy loại nhân viên đang đăng nhập
-	roleValue, _ := c.Get("loai_nhan_vien")
+	// Lấy thông tin admin hiện đang đăng nhập
+	roleValue, _ := c.Get("role")
 	currentRole, _ := roleValue.(string)
 
 	// 🔹 Tìm nhân viên theo ID
@@ -118,7 +119,7 @@ func UpdateNhanVien(c *gin.Context) {
 		return
 	}
 
-	// 🔹 Lấy dữ liệu form
+	// 🔹 Lấy dữ liệu từ form
 	hoTen := c.PostForm("ho_ten")
 	gioiTinh := c.PostForm("gioi_tinh")
 	ngaySinh := c.PostForm("ngay_sinh")
@@ -126,22 +127,12 @@ func UpdateNhanVien(c *gin.Context) {
 	diaChi := c.PostForm("dia_chi")
 	email := c.PostForm("email")
 	loaiNhanVien := c.PostForm("loai_nhan_vien")
-
-	oldPassword := c.PostForm("mat_khau_cu")
 	newPassword := c.PostForm("mat_khau_moi")
 	confirmPassword := c.PostForm("xac_nhan_mat_khau_moi")
 
-	// ✅ Admin có thể chỉnh sửa tất cả loại nhân viên
-	// nhưng nhân viên thường thì KHÔNG được thay đổi loại của mình
-	if loaiNhanVien != "" {
-		if currentRole != "admin" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền thay đổi loại nhân viên"})
-			return
-		}
-		nv.LoaiNhanVien = loaiNhanVien
-	}
+	fmt.Println("Loại nhân viên nhập vào:", loaiNhanVien)
 
-	// ✅ Cập nhật các thông tin cơ bản (ai cũng có thể)
+	// 🔹 Cập nhật thông tin cơ bản (nếu có)
 	if hoTen != "" {
 		nv.HoTen = hoTen
 	}
@@ -161,41 +152,25 @@ func UpdateNhanVien(c *gin.Context) {
 		nv.Email = email
 	}
 
-	// ✅ Xử lý đổi mật khẩu
+	// 🔹 Nếu là admin thì có thể thay đổi loại nhân viên
 	if currentRole == "admin" {
-		// 👑 ADMIN có thể đổi trực tiếp (chỉ cần nhập mật khẩu mới)
-		if newPassword != "" {
-			if newPassword != confirmPassword {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Xác nhận mật khẩu mới không khớp"})
-				return
-			}
-			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-			nv.MatKhau = string(hashedPassword)
-		}
-	} else {
-		// 👤 USER phải nhập đúng mật khẩu cũ
-		if oldPassword != "" || newPassword != "" || confirmPassword != "" {
-			if oldPassword == "" || newPassword == "" || confirmPassword == "" {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Cần nhập đủ mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu mới"})
-				return
-			}
-
-			if err := bcrypt.CompareHashAndPassword([]byte(nv.MatKhau), []byte(oldPassword)); err != nil {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu cũ không đúng"})
-				return
-			}
-
-			if newPassword != confirmPassword {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Xác nhận mật khẩu mới không khớp"})
-				return
-			}
-
-			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-			nv.MatKhau = string(hashedPassword)
-		}
+		nv.LoaiNhanVien = loaiNhanVien
 	}
 
-	// ✅ Upload ảnh mới (nếu có)
+	// 🔹 Admin có thể đặt lại mật khẩu cho nhân viên
+	if currentRole == "admin" {
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+		nv.MatKhau = string(hashedPassword)
+	} else if currentRole == "user" {
+		if newPassword != confirmPassword {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Xác nhận mật khẩu mới không khớp"})
+			return
+		}
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+		nv.MatKhau = string(hashedPassword)
+	}
+
+	// 🔹 Upload ảnh mới (nếu có)
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
 		src, _ := file.Open()
@@ -219,15 +194,14 @@ func UpdateNhanVien(c *gin.Context) {
 		config.DB.Create(&newImg)
 	}
 
-	// ✅ Lưu thay đổi
+	// 🔹 Lưu thay đổi
 	if err := config.DB.Save(&nv).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật nhân viên: " + err.Error()})
 		return
 	}
 
-	// ✅ Lấy lại thông tin mới
+	// Trả về kết quả
 	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNV)
-
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật nhân viên thành công",
 		"data":    nv,
@@ -253,14 +227,24 @@ func DeleteNhanVien(c *gin.Context) {
 
 func UpdateThongTinCaNhan(c *gin.Context) {
 	id := c.Param("id")
-	var nv models.NhanVien
 
+	// ✅ Lấy user hiện tại từ middleware (Auth)
+	currentUserID := c.GetUint("user_id")
+	currentRole := c.GetString("role")
+
+	// ✅ Nếu không phải admin và ID khác chính mình → cấm
+	if currentRole != "admin" && fmt.Sprint(currentUserID) != id {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền chỉnh sửa thông tin người khác"})
+		return
+	}
+
+	var nv models.NhanVien
 	if err := config.DB.Preload("AnhNhanVien").First(&nv, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
 		return
 	}
 
-	// Lấy dữ liệu form
+	// ✅ Lấy dữ liệu form
 	hoTen := c.PostForm("ho_ten")
 	gioiTinh := c.PostForm("gioi_tinh")
 	ngaySinh := c.PostForm("ngay_sinh")
@@ -272,7 +256,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 	newPassword := c.PostForm("mat_khau_moi")
 	confirmPassword := c.PostForm("xac_nhan_mat_khau_moi")
 
-	// Cập nhật thông tin cơ bản
+	// ✅ Cập nhật thông tin cơ bản
 	if hoTen != "" {
 		nv.HoTen = hoTen
 	}
@@ -292,16 +276,19 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		nv.Email = email
 	}
 
-	// ✅ Đổi mật khẩu khi có nhập đủ 3 trường
+	// ✅ Đổi mật khẩu (nếu có nhập đủ 3 trường)
 	if oldPassword != "" || newPassword != "" || confirmPassword != "" {
 		if oldPassword == "" || newPassword == "" || confirmPassword == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Cần nhập đủ mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu mới"})
 			return
 		}
 
-		if err := bcrypt.CompareHashAndPassword([]byte(nv.MatKhau), []byte(oldPassword)); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu cũ không đúng"})
-			return
+		// Chỉ người tự đổi mật khẩu mới cần check password cũ
+		if currentRole != "admin" {
+			if err := bcrypt.CompareHashAndPassword([]byte(nv.MatKhau), []byte(oldPassword)); err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu cũ không đúng"})
+				return
+			}
 		}
 
 		if newPassword != confirmPassword {
@@ -313,7 +300,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		nv.MatKhau = string(hashedPassword)
 	}
 
-	// ✅ Upload ảnh mới (nếu có)
+	// ✅ Upload ảnh (nếu có)
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
 		src, _ := file.Open()
