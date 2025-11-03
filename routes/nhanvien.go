@@ -14,6 +14,7 @@ func NhanVienRoutes(r *gin.Engine) {
 		nhanvien.PUT("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
 		nhanvien.DELETE("/delete/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.DeleteNhanVien)
 
+		nhanvien.GET("/layRaThongTinNhanVien/:id", controllers.GetNhanVienByID)
 		// ✅ Chỉ nhân viên được phép
 		nhanvien.PUT("/capNhatThongTinCaNhan/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("user"), controllers.UpdateThongTinCaNhan)
 
