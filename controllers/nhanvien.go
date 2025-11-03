@@ -125,7 +125,6 @@ func UpdateNhanVien(c *gin.Context) {
 	sdt := c.PostForm("sdt")
 	diaChi := c.PostForm("dia_chi")
 	email := c.PostForm("email")
-	loaiNhanVien := c.PostForm("loai_nhan_vien")
 
 	oldPassword := c.PostForm("mat_khau_cu")
 	newPassword := c.PostForm("mat_khau_moi")
@@ -133,13 +132,6 @@ func UpdateNhanVien(c *gin.Context) {
 
 	// ✅ Admin có thể chỉnh sửa tất cả loại nhân viên
 	// nhưng nhân viên thường thì KHÔNG được thay đổi loại của mình
-	if loaiNhanVien != "" {
-		if currentRole != "admin" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền thay đổi loại nhân viên"})
-			return
-		}
-		nv.LoaiNhanVien = loaiNhanVien
-	}
 
 	// ✅ Cập nhật các thông tin cơ bản (ai cũng có thể)
 	if hoTen != "" {
