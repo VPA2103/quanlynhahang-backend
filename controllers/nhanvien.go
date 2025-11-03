@@ -158,14 +158,16 @@ func UpdateNhanVien(c *gin.Context) {
 	}
 
 	// 🔹 Admin có thể đặt lại mật khẩu cho nhân viên
-	if currentRole == "admin" {
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-		nv.MatKhau = string(hashedPassword)
-	} else if currentRole == "user" {
-		if newPassword != confirmPassword {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Xác nhận mật khẩu mới không khớp"})
-			return
+	// 🔹 Xử lý cập nhật mật khẩu
+	if newPassword != "" { // chỉ cập nhật nếu có mật khẩu mới
+		if currentRole == "user" {
+			if newPassword != confirmPassword {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Xác nhận mật khẩu mới không khớp"})
+				return
+			}
 		}
+
+		// Admin không cần xác nhận lại, chỉ cần nhập mật khẩu mới
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 		nv.MatKhau = string(hashedPassword)
 	}
