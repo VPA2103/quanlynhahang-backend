@@ -109,35 +109,26 @@ func UpdateNhanVien(c *gin.Context) {
 	id := c.Param("id")
 	var nv models.NhanVien
 
-	// Lấy thông tin admin hiện đang đăng nhập
-	roleValue, _ := c.Get("role")
-	currentRole, _ := roleValue.(string)
-
-	// 🔹 Tìm nhân viên theo ID
-	if err := config.DB.Preload("AnhNhanVien").First(&nv, id).Error; err != nil {
+	// Tìm nhân viên theo ID
+	if err := config.DB.First(&nv, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
 		return
 	}
 
-	// 🔹 Lấy dữ liệu từ form
-	hoTen := c.PostForm("ho_ten")
+	matKhau := c.PostForm("mat_khau")
 	gioiTinh := c.PostForm("gioi_tinh")
+	hoTen := c.PostForm("ho_ten")
 	ngaySinh := c.PostForm("ngay_sinh")
 	sdt := c.PostForm("sdt")
 	diaChi := c.PostForm("dia_chi")
 	email := c.PostForm("email")
-	loaiNhanVien := c.PostForm("loai_nhan_vien")
-	newPassword := c.PostForm("mat_khau_moi")
-	confirmPassword := c.PostForm("xac_nhan_mat_khau_moi")
 
-	fmt.Println("Loại nhân viên nhập vào:", loaiNhanVien)
-
-	// 🔹 Cập nhật thông tin cơ bản (nếu có)
+	// Cập nhật từng trường nếu có dữ liệu
+	if matKhau != "" {
+		nv.MatKhau = matKhau
+	}
 	if hoTen != "" {
 		nv.HoTen = hoTen
-	}
-	if gioiTinh != "" {
-		nv.GioiTinh = gioiTinh
 	}
 	if ngaySinh != "" {
 		nv.NgaySinh = ngaySinh
@@ -151,28 +142,10 @@ func UpdateNhanVien(c *gin.Context) {
 	if email != "" {
 		nv.Email = email
 	}
-
-	// 🔹 Nếu là admin thì có thể thay đổi loại nhân viên
-	if currentRole == "admin" {
-		nv.LoaiNhanVien = loaiNhanVien
+	if gioiTinh != "" {
+		nv.GioiTinh = gioiTinh
 	}
 
-	// 🔹 Admin có thể đặt lại mật khẩu cho nhân viên
-	// 🔹 Xử lý cập nhật mật khẩu
-	if newPassword != "" { // chỉ cập nhật nếu có mật khẩu mới
-		if currentRole == "user" {
-			if newPassword != confirmPassword {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Xác nhận mật khẩu mới không khớp"})
-				return
-			}
-		}
-
-		// Admin không cần xác nhận lại, chỉ cần nhập mật khẩu mới
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-		nv.MatKhau = string(hashedPassword)
-	}
-
-	// 🔹 Upload ảnh mới (nếu có)
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
 		src, _ := file.Open()
@@ -196,16 +169,25 @@ func UpdateNhanVien(c *gin.Context) {
 		config.DB.Create(&newImg)
 	}
 
+	// ✅ Lưu thay đổi
 	// 🔹 Lưu thay đổi
 	if err := config.DB.Save(&nv).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật nhân viên: " + err.Error()})
 		return
 	}
 
+	// ✅ Lấy lại thông tin mới
 	// Trả về kết quả
 	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNV)
+
+	// Lưu thay đổi
+	//if err := config.DB.Save(&nv).Error; err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Cập nhật thất bại: " + err.Error()})
+	//	return
+	//}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Cập nhật nhân viên thành công",
+		"message": "Cập nhật thành công",
 		"data":    nv,
 	})
 }
