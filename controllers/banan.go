@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/utils"
 )
 
 func CreateBanAn(c *gin.Context) {
@@ -27,6 +28,22 @@ func CreateBanAn(c *gin.Context) {
 	if err := config.DB.Create(&ban).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo bàn ăn: " + err.Error()})
 		return
+	}
+
+	// ✅ Gọi hàm tạo QR code
+	qrPath, err := utils.GenerateQR(int(ban.MaBan), ban.TenBan, ban.SoChoNgoi, ban.TrangThai)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã QR: " + err.Error()})
+		return
+	}
+
+	// ✅ Upload QR lên Cloudinary (tùy chọn)
+	uploadResult, err := config.CLD.Upload.Upload(c, qrPath, uploader.UploadParams{
+		Folder: "banan_qr",
+	})
+	if err == nil {
+		ban.Anh_QR = uploadResult.SecureURL
+		config.DB.Save(&ban)
 	}
 
 	// ✅ Upload ảnh bàn (nếu có)

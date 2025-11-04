@@ -8,7 +8,7 @@ type NhanVien struct {
 	SDT          string `json:"sdt" form:"sdt"`
 	DiaChi       string `json:"dia_chi" form:"dia_chi"`
 	NgayVaoLam   string `json:"ngay_vao_lam" form:"ngay_vao_lam"`
-	Email        string `json:"email" form:"email"`
+	Email        string `json:"email" form:"email" `
 	MatKhau      string `json:"mat_khau" form:"mat_khau"`
 	LoaiNhanVien string `gorm:"type:text;not null" json:"loai_nhan_vien" form:"loai_nhan_vien"`
 	// ✅ Khai báo quan hệ 1-1 rõ ràng

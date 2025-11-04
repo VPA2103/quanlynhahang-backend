@@ -125,8 +125,10 @@ func UpdateNhanVien(c *gin.Context) {
 
 	// Cập nhật từng trường nếu có dữ liệu
 	if matKhau != "" {
+
 		nv.MatKhau = matKhau
 	}
+
 	if hoTen != "" {
 		nv.HoTen = hoTen
 	}
@@ -170,7 +172,6 @@ func UpdateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Lưu thay đổi
-	// 🔹 Lưu thay đổi
 	if err := config.DB.Save(&nv).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật nhân viên: " + err.Error()})
 		return
@@ -179,12 +180,6 @@ func UpdateNhanVien(c *gin.Context) {
 	// ✅ Lấy lại thông tin mới
 	// Trả về kết quả
 	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNV)
-
-	// Lưu thay đổi
-	//if err := config.DB.Save(&nv).Error; err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Cập nhật thất bại: " + err.Error()})
-	//	return
-	//}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật thành công",
