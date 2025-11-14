@@ -30,4 +30,5 @@ func SetupRoutes(r *gin.Engine) {
 	// 👨‍💼 Nhân viên routes (có thể để ngoài hoặc trong nhóm admin)
 	NhanVienRoutes(r)
 	BanAnRoutes(r)
+	Payment(r)
 }
