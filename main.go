@@ -15,6 +15,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️  Không tìm thấy file .env, dùng SECRET_KEY mặc định")
 	}
+	config.LoadPaymentConfig()
 	// 💾 Kết nối Cloudinary
 	config.InitCloudinary()
 	// 🔧 Khởi tạo Gin
