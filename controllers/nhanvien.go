@@ -40,12 +40,12 @@ func CreateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Hash mật khẩu
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(nv.MatKhau), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể mã hóa mật khẩu"})
-		return
-	}
-	nv.MatKhau = string(hashedPassword)
+	//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(nv.MatKhau), bcrypt.DefaultCost)
+	//if err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể mã hóa mật khẩu"})
+	//	return
+	//}
+	nv.MatKhau = nv.MatKhau
 
 	// ✅ Lưu nhân viên trước để có MaNV (ID)
 	if err := config.DB.Create(&nv).Error; err != nil {
