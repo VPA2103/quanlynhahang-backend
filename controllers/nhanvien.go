@@ -125,7 +125,6 @@ func UpdateNhanVien(c *gin.Context) {
 
 	// Cập nhật từng trường nếu có dữ liệu
 	if matKhau != "" {
-
 		nv.MatKhau = matKhau
 	}
 

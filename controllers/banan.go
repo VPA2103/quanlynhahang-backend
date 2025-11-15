@@ -95,6 +95,25 @@ func GetAllBanAn(c *gin.Context) {
 	})
 }
 
+func GetBanAnByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var banan models.BanAn
+
+	// 🔥 Query đúng: WHERE id = ? + Preload ảnh
+	if err := config.DB.Preload("AnhBan").First(&banan, "ma_ban = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Không tìm thấy bàn ăn với ID " + id,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Lấy thông tin bàn ăn thành công",
+		"data":    banan,
+	})
+}
+
 // ✅ Cập nhật thông tin bàn ăn
 func UpdateBanAn(c *gin.Context) {
 	id := c.Param("id")
