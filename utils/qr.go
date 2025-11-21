@@ -8,10 +8,16 @@ import (
 	"github.com/subiz/vietqr"
 )
 
-func GenerateQRBytes(maBan int, tenBan string, soChoNgoi int, trangThai string) ([]byte, error) {
+func GenerateQRBytes(maBan int, tenBan string, soChoNgoi int, trangThai int) ([]byte, error) {
+
+	trangThaiText := "Trống"
+	if trangThai == 1 {
+		trangThaiText = "Có"
+	}
+
 	content := fmt.Sprintf(
 		"Tên bàn: %s\nMã bàn: %d\nSố chỗ ngồi: %d\nTrạng thái: %s",
-		tenBan, maBan, soChoNgoi, trangThai,
+		tenBan, maBan, soChoNgoi, trangThaiText,
 	)
 
 	// ✅ Tạo QR code trong bộ nhớ (RAM)

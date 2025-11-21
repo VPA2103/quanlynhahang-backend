@@ -12,7 +12,7 @@ func BanAnRoutes(r *gin.Engine) {
 		banan.GET("/layTatCa", controllers.GetAllBanAn)
 		banan.GET("/layRaThongTinBanan/:id", controllers.GetBanAnByID)
 
-		banan.PUT("/update/:id", controllers.UpdateBanAn)
+		banan.PATCH("/update/:id", controllers.UpdateBanAn)
 		banan.DELETE("/delete/:id", controllers.DeleteBanAn)
 	}
 }
