@@ -23,10 +23,10 @@ func CreateBanAn(c *gin.Context) {
 	}
 
 	// ✅ Mặc định trạng thái là "Trống"
-	if ban.TrangThai != 0 {
-		defaultTrangThai := 0
-		ban.TrangThai = defaultTrangThai
-	}
+	//if ban.TrangThai != 0 {
+	//	defaultTrangThai := 0
+	//	ban.TrangThai = defaultTrangThai
+	//}
 
 	// ✅ Tạo record trong DB trước để có MaBan
 	if err := config.DB.Create(&ban).Error; err != nil {
