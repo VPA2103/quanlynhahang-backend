@@ -121,6 +121,7 @@ func UpdateNhanVien(c *gin.Context) {
 	ngaySinh := c.PostForm("ngay_sinh")
 	sdt := c.PostForm("sdt")
 	diaChi := c.PostForm("dia_chi")
+	loaiNhanVien := c.PostForm("loai_nhan_vien")
 	email := c.PostForm("email")
 
 	// Cập nhật từng trường nếu có dữ liệu
@@ -142,6 +143,9 @@ func UpdateNhanVien(c *gin.Context) {
 	}
 	if email != "" {
 		nv.Email = email
+	}
+	if loaiNhanVien != "" {
+		nv.LoaiNhanVien = loaiNhanVien
 	}
 	if gioiTinh != "" {
 		nv.GioiTinh = gioiTinh

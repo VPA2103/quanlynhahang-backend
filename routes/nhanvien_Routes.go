@@ -13,6 +13,7 @@ func NhanVienRoutes(r *gin.Engine) {
 		nhanvien.POST("/create", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.CreateNhanVien)
 		nhanvien.PATCH("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
 		nhanvien.DELETE("/delete/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.DeleteNhanVien)
+		nhanvien.POST("/create-nv-db", controllers.CreateNhanVien)
 
 		nhanvien.GET("/layRaThongTinNhanVien/:id", controllers.GetNhanVienByID)
 
