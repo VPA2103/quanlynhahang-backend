@@ -13,91 +13,64 @@ import (
 func CreateMonAn(c *gin.Context) {
 	var monan models.MonAn
 
-	// Lấy dữ liệu form-data
 	if err := c.ShouldBind(&monan); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Dữ liệu không hợp lệ: " + err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
 		return
 	}
 
 	if monan.TenMonAn == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Tên món ăn không được để trống",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Tên món ăn không được để trống"})
 		return
 	}
 
-	// Upload ảnh
+	// Tạo món ăn trước để có ID
+	if err := config.DB.Create(&monan).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo món ăn: " + err.Error()})
+		return
+	}
+
+	// Upload ảnh nếu có
 	file, err := c.FormFile("image")
-	if err == nil && file != nil {
-		src, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Không thể mở file ảnh",
-			})
-			return
-		}
+	if err == nil {
+		src, _ := file.Open()
 		defer src.Close()
 
-		uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-			Folder: "monan",
-		})
+		upload, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{Folder: "monan"})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Upload ảnh thất bại: " + err.Error(),
-			})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload ảnh lỗi: " + err.Error()})
 			return
 		}
 
-		monan.AnhMonAn = uploadResult.SecureURL
+		// Lưu vào bảng Images
+		image := models.Images{
+			ImageURL:  upload.SecureURL,
+			OwnerID:   monan.MaMonAn,
+			OwnerType: "mon_an",
+		}
+		config.DB.Create(&image)
 	}
 
-	// Lưu database
-	if err := config.DB.Create(&monan).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể tạo món ăn: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Tạo món ăn thành công",
-		"data":    monan,
-	})
+	c.JSON(http.StatusCreated, gin.H{"message": "Tạo món ăn thành công", "data": monan})
 }
 
 // ======================= GET ALL =======================
 func GetAllMonAn(c *gin.Context) {
 	var list []models.MonAn
+	config.DB.Preload("AnhMonAn").Find(&list)
 
-	if err := config.DB.Find(&list).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể lấy danh sách món ăn: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"data": list,
-	})
+	c.JSON(http.StatusOK, gin.H{"data": list})
 }
 
-// ======================= GET ONE =======================
 func GetMonAnByID(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
-	if err := config.DB.First(&monan, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Không tìm thấy món ăn",
-		})
+	if err := config.DB.Preload("AnhMonAn").First(&monan, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"data": monan,
-	})
+	c.JSON(http.StatusOK, gin.H{"data": monan})
 }
 
 // ======================= UPDATE =======================
@@ -105,59 +78,35 @@ func UpdateMonAn(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
-	// Kiểm tra tồn tại
 	if err := config.DB.First(&monan, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Không tìm thấy món ăn",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
-	// Bind dữ liệu mới
-	if err := c.ShouldBind(&monan); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Dữ liệu không hợp lệ: " + err.Error(),
-		})
-		return
-	}
+	// Cập nhật thông tin text
+	c.ShouldBind(&monan)
+	config.DB.Save(&monan)
 
-	// Upload ảnh mới nếu có
+	// Nếu có upload ảnh mới → tạo bản ghi mới vào bảng Images (không ghi đè)
 	file, err := c.FormFile("image")
-	if err == nil && file != nil {
-		src, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Không thể mở file ảnh",
-			})
-			return
-		}
+	if err == nil {
+		src, _ := file.Open()
 		defer src.Close()
 
-		uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-			Folder: "monan",
-		})
+		upload, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{Folder: "monan"})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Upload ảnh thất bại: " + err.Error(),
-			})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload ảnh lỗi"})
 			return
 		}
 
-		monan.AnhMonAn = uploadResult.SecureURL
-	}
-
-	// Cập nhật DB
-	if err := config.DB.Save(&monan).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể cập nhật món ăn: " + err.Error(),
+		config.DB.Create(&models.Images{
+			ImageURL:  upload.SecureURL,
+			OwnerID:   monan.MaMonAn,
+			OwnerType: "mon_an",
 		})
-		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Cập nhật món ăn thành công",
-		"data":    monan,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Cập nhật món ăn thành công", "data": monan})
 }
 
 // ======================= DELETE =======================
@@ -165,23 +114,16 @@ func DeleteMonAn(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
-	// Kiểm tra tồn tại
 	if err := config.DB.First(&monan, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Không tìm thấy món ăn",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
-	// Xóa DB
-	if err := config.DB.Delete(&monan).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể xóa món ăn: " + err.Error(),
-		})
-		return
-	}
+	// Xóa ảnh thuộc món ăn
+	config.DB.Where("owner_id = ? AND owner_type = ?", id, "mon_an").Delete(&models.Images{})
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Xóa món ăn thành công",
-	})
+	// Xóa món ăn
+	config.DB.Delete(&monan)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Xóa món ăn thành công"})
 }
