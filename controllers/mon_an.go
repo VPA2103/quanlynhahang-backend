@@ -13,44 +13,53 @@ import (
 func CreateMonAn(c *gin.Context) {
 	var monan models.MonAn
 
+	// Bind dữ liệu form
 	if err := c.ShouldBind(&monan); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
 		return
 	}
 
+	// Validate
 	if monan.TenMonAn == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Tên món ăn không được để trống"})
 		return
 	}
 
-	// Tạo món ăn trước để có ID
+	// Tạo trước để lấy ID
 	if err := config.DB.Create(&monan).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo món ăn: " + err.Error()})
 		return
 	}
 
-	// Upload ảnh nếu có
+	// Upload ảnh món ăn nếu có
 	file, err := c.FormFile("image")
-	if err == nil {
-		src, _ := file.Open()
-		defer src.Close()
+	if err == nil && file != nil {
+		src, err := file.Open()
+		if err == nil {
+			defer src.Close()
 
-		upload, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{Folder: "monan"})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload ảnh lỗi: " + err.Error()})
-			return
-		}
+			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
+				Folder: "monan",
+			})
 
-		// Lưu vào bảng Images
-		image := models.Images{
-			ImageURL:  upload.SecureURL,
-			OwnerID:   monan.MaMonAn,
-			OwnerType: "mon_an",
+			if err == nil {
+				img := models.Images{
+					OwnerID:   monan.MaMonAn,
+					OwnerType: "mon_an",
+					ImageURL:  uploadResult.SecureURL,
+				}
+				config.DB.Create(&img)
+			}
 		}
-		config.DB.Create(&image)
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Tạo món ăn thành công", "data": monan})
+	// Lấy món ăn kèm ảnh trả về client
+	config.DB.Preload("AnhMonAn").First(&monan, monan.MaMonAn)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Tạo món ăn thành công",
+		"data":    monan,
+	})
 }
 
 // ======================= GET ALL =======================
