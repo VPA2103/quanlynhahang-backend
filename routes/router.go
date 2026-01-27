@@ -32,5 +32,6 @@ func SetupRoutes(r *gin.Engine) {
 	BanAnRoutes(r)
 	LoaiMonAnRoutes(r)
 	MonAnRoutes(r)
+	LienHeRoutes(r)
 	Payment(r)
 }

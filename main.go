@@ -14,7 +14,7 @@ import (
 func main() {
 
 	if err := godotenv.Load(); err != nil {
-		log.Println("⚠️  Không tìm thấy file .env, dùng SECRET_KEY mặc định")
+		log.Println("⚠Không tìm thấy file .env, dùng SECRET_KEY mặc định")
 	}
 	config.LoadPaymentConfig()
 	// 💾 Kết nối Cloudinary
@@ -37,6 +37,7 @@ func main() {
 		&models.DatBan{},
 		&models.NhanVien{},
 		&models.Images{},
+		&models.LienHe{},
 		&models.HoaDon{},
 		&models.ChiTietHoaDon{},
 		&models.ThanhToan{},
