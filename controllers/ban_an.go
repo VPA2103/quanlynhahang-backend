@@ -120,52 +120,72 @@ func UpdateBanAn(c *gin.Context) {
 	id := c.Param("id")
 	var ban models.BanAn
 
-	// 🔹 Tìm bàn ăn theo ID
+	// 1️⃣ Tìm bàn ăn
 	if err := config.DB.First(&ban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy bàn ăn"})
 		return
 	}
 
-	// 🔹 Bind dữ liệu form
+	// 2️⃣ Bind dữ liệu form
 	var input models.BanAn
 	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu gửi lên không hợp lệ: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Dữ liệu gửi lên không hợp lệ: " + err.Error(),
+		})
 		return
 	}
 
-	// 🔹 Cập nhật thông tin
+	// 3️⃣ Update text (AN TOÀN)
 	ban.TenBan = input.TenBan
 	ban.SoChoNgoi = input.SoChoNgoi
 	ban.TrangThai = input.TrangThai
 
 	if err := config.DB.Save(&ban).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật bàn ăn: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể cập nhật bàn ăn: " + err.Error(),
+		})
 		return
 	}
 
-	// 🔹 Nếu có upload ảnh mới
+	// 4️⃣ Upload ảnh mới (nếu có)
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
 		src, err := file.Open()
-		if err == nil {
-			defer src.Close()
-
-			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-				Folder: "banan",
-			})
-			if err == nil {
-				img := models.Images{
-					OwnerID:   ban.MaBan,
-					OwnerType: "ban_an",
-					ImageURL:  uploadResult.SecureURL,
-				}
-				config.DB.Create(&img)
-			}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không mở được file ảnh"})
+			return
 		}
+		defer src.Close()
+
+		uploadResult, err := config.CLD.Upload.Upload(
+			c,
+			src,
+			uploader.UploadParams{
+				Folder: "banan",
+			},
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload ảnh lỗi"})
+			return
+		}
+
+		// 🔥 XÓA TOÀN BỘ ẢNH CŨ CỦA BÀN ĂN
+		config.DB.
+			Where("owner_id = ? AND owner_type = ?", ban.MaBan, "ban_an").
+			Delete(&models.Images{})
+
+		// 🔥 THÊM ẢNH MỚI
+		config.DB.Create(&models.Images{
+			OwnerID:   ban.MaBan,
+			OwnerType: "ban_an",
+			ImageURL:  uploadResult.SecureURL,
+		})
 	}
 
+	// 5️⃣ Load lại quan hệ ảnh
 	config.DB.Preload("AnhBan").First(&ban, ban.MaBan)
 
+	// 6️⃣ Response
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật bàn ăn thành công",
 		"data":    ban,

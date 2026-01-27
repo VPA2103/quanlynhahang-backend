@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -50,7 +51,12 @@ func main() {
 	routes.UploadRoutes(r)
 
 	// 🚀 Chạy server
-	if err := r.Run(":3000"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000" // chạy local
+	}
+
+	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("❌ Không thể khởi chạy server: %v", err)
 	}
 }

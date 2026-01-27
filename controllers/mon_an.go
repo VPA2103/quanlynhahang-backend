@@ -87,27 +87,44 @@ func UpdateMonAn(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
+	// 1. Tìm món ăn
 	if err := config.DB.First(&monan, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
-	// Cập nhật thông tin text
-	c.ShouldBind(&monan)
-	config.DB.Save(&monan)
+	// 2. Bind & update text (AN TOÀN)
+	var input models.MonAn
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	config.DB.Model(&monan).Updates(input)
 
-	// Nếu có upload ảnh mới → tạo bản ghi mới vào bảng Images (không ghi đè)
+	// 3. Upload ảnh mới (nếu có)
 	file, err := c.FormFile("image")
 	if err == nil {
 		src, _ := file.Open()
 		defer src.Close()
 
-		upload, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{Folder: "monan"})
+		upload, err := config.CLD.Upload.Upload(
+			c,
+			src,
+			uploader.UploadParams{
+				Folder: "monan",
+			},
+		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload ảnh lỗi"})
 			return
 		}
 
+		// 🔥 XÓA TẤT CẢ ẢNH CŨ
+		config.DB.
+			Where("owner_id = ? AND owner_type = ?", monan.MaMonAn, "mon_an").
+			Delete(&models.Images{})
+
+		// 🔥 THÊM ẢNH MỚI
 		config.DB.Create(&models.Images{
 			ImageURL:  upload.SecureURL,
 			OwnerID:   monan.MaMonAn,
@@ -115,7 +132,14 @@ func UpdateMonAn(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Cập nhật món ăn thành công", "data": monan})
+	// 4. Load lại quan hệ ảnh
+	config.DB.Preload("AnhMonAn").First(&monan, id)
+
+	// 5. Response
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Cập nhật món ăn thành công",
+		"data":    monan,
+	})
 }
 
 // ======================= DELETE =======================

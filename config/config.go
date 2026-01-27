@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -15,23 +14,24 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-
-	//load lấy dữ liệu từ file env
-	godotenv.Load()
-
 	dsn := os.Getenv("DB_URL")
+
+	if dsn == "" {
+		panic("❌ DB_URL không tồn tại! Hãy kiểm tra Variables trong Railway.")
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("Failed to connect to database!")
+		panic(fmt.Sprintf("❌ Failed to connect to database: %v", err))
 	}
 
 	DB = db
-	fmt.Println("✅ Database connected successfully")
+	fmt.Println("🚀 Database connected successfully")
 }
 
 func SetupCORS(r *gin.Engine) {
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{`http://localhost:4200`},
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

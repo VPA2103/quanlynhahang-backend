@@ -27,8 +27,7 @@ RUN apk add --no-cache ca-certificates tzdata
 
 # Copy binary từ builder
 COPY --from=builder /app/app .
-# Copy file .env vào container
-COPY .env /app/.env
+
 
 EXPOSE 30000
 
