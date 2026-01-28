@@ -23,7 +23,7 @@ func GuiLienHe(c *gin.Context) {
 		return
 	}
 
-	if lienHe.HoTen == "" || lienHe.Email == "" || lienHe.TieuDe == "" || lienHe.NoiDung == "" {
+	if lienHe.HoTen == "" || lienHe.Email == "" || lienHe.TieuDe == "" || lienHe.NoiDung == "" || lienHe.SDT == "" {
 		c.JSON(400, gin.H{"message": "Vui lòng nhập đầy đủ thông tin"})
 		return
 	}
