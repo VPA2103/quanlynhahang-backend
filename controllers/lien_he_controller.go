@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/realtime"
 )
 
 func GuiLienHe(c *gin.Context) {
@@ -31,6 +32,17 @@ func GuiLienHe(c *gin.Context) {
 		c.JSON(500, gin.H{"message": "Lưu liên hệ thất bại"})
 		return
 	}
+	// thông báo realtime
+	noti := models.Notification{
+		UserID:  1, // admin
+		Title:   "Liên hệ mới",
+		Content: "Có khách vừa gửi liên hệ",
+		Type:    "contact",
+	}
+	config.DB.Create(&noti)
+
+	// 3. Push realtime
+	realtime.PushToUser("1", noti)
 
 	c.JSON(200, gin.H{
 		"message": "Gửi thành công",
