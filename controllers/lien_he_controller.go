@@ -70,3 +70,28 @@ func AdminGetAllLienHe(c *gin.Context) {
 		"data":    danhSachLienHe,
 	})
 }
+
+func DeleteLienHe(c *gin.Context) {
+	id := c.Param("id")
+	var lienhe models.LienHe
+
+	// Kiểm tra tồn tại
+	if err := config.DB.First(&lienhe, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Không tìm thấy liên hệ",
+		})
+		return
+	}
+
+	// Xóa
+	if err := config.DB.Delete(&lienhe).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Xóa liên hệ thất bại",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Xóa thành công",
+	})
+}

@@ -10,5 +10,6 @@ func LienHeRoutes(r *gin.Engine) {
 	{
 		lienhe.POST("/create", controllers.GuiLienHe)
 		lienhe.GET("", controllers.AdminGetAllLienHe)
+		lienhe.DELETE("/:id", controllers.DeleteLienHe)
 	}
 }
