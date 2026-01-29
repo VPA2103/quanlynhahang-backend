@@ -1,17 +1,17 @@
 package models
 
-import "time"
-
 type DatBan struct {
-	MaDatBan     uint `gorm:"primaryKey;size:10;autoIncrement"`
-	TenKhachHang string
-	SDT          string
-	GhiChu       string
-	MaBanAn      string
-	NgayDatBan   time.Time
-	GioDatBan    string
-	TrangThai    string
+	Id           uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	TenKhachHang string `json:"ten_khach_hang" form:"ten_khach_hang" binding:"required"`
+	SDT          string `json:"sdt" form:"sdt" binding:"required"`
+	GhiChu       string `json:"ghi_chu" form:"ghi_chu"`
+	MaBanAn      uint   `json:"ma_ban_an" form:"ma_ban_an" binding:"required"`
+	Ngay         string `json:"ngay" form:"ngay" binding:"required"`
+	Gio          string `json:"gio" form:"gio" binding:"required"`
 
-	MaNhanVien uint     `gorm:"size:10"` // foreign key
-	NhanVien   NhanVien `gorm:"foreignKey:MaNhanVien;references:MaNV"`
+	TrangThai string `gorm:"type:varchar(50);default:'dang_xu_ly'" json:"trang_thai"`
+
+	// 🔑 Khóa ngoại – cho phép NULL
+	IDNhanVienXacNhan *uint     `json:"id_nhan_vien_xac_nhan"`
+	NhanVienXacNhan   *NhanVien `gorm:"foreignKey:IDNhanVienXacNhan;references:MaNV" json:"nhan_vien_xac_nhan,omitempty"`
 }

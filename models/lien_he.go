@@ -9,6 +9,6 @@ type LienHe struct {
 	Email     string    `json:"email" form:"email" gorm:"type:varchar(150);not null;index"`
 	TieuDe    string    `json:"tieu_de" form:"tieu_de" gorm:"type:varchar(200);not null"`
 	NoiDung   string    `json:"noi_dung" form:"noi_dung" gorm:"type:text;not null"`
-	TrangThai string    `json:"trang_thai" gorm:"type:varchar(50);default:'chua_xu_ly'"`
+	TrangThai string    `json:"trang_thai" form:"trang_thai" gorm:"type:varchar(50);default:'chua_xu_ly'"`
 	CreatedAt time.Time `json:"created_at"`
 }

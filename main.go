@@ -31,19 +31,27 @@ func main() {
 
 	// 🧱 Tự động migrate
 	err := config.DB.AutoMigrate(
+		// 1. Bảng nền (không phụ thuộc)
 		&models.KhachHang{},
-		&models.BanAn{},
-		&models.MonAn{},
-		&models.LoaiMonAn{},
-		&models.DatBan{},
 		&models.NhanVien{},
+		&models.LoaiMonAn{},
+		&models.BanAn{},
+
+		// 2. Bảng phụ thuộc mức 1
+		&models.MonAn{},  // phụ thuộc LoaiMonAn
+		&models.DatBan{}, // phụ thuộc NhanVien, BanAn
+		&models.HoaDon{}, // phụ thuộc KhachHang, NhanVien
+
+		// 3. Bảng phụ thuộc mức 2
+		&models.ChiTietHoaDon{}, // phụ thuộc HoaDon, MonAn
+		&models.ThanhToan{},     // phụ thuộc HoaDon
+
+		// 4. Polymorphic / phụ
 		&models.Images{},
-		&models.LienHe{},
-		&models.HoaDon{},
 		&models.Notification{},
-		&models.ChiTietHoaDon{},
-		&models.ThanhToan{},
+		&models.LienHe{},
 	)
+
 	if err != nil {
 		log.Fatalf("❌ Lỗi khi migrate DB: %v", err)
 	}
