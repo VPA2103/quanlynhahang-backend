@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/send_mail"
 )
 
 func CreateDatBan(c *gin.Context) {
@@ -19,6 +21,7 @@ func CreateDatBan(c *gin.Context) {
 	// ÉP logic nghiệp vụ
 	datban := models.DatBan{
 		TenKhachHang: input.TenKhachHang,
+		Email:        input.Email,
 		SDT:          input.SDT,
 		GhiChu:       input.GhiChu,
 		MaBanAn:      input.MaBanAn,
@@ -32,6 +35,13 @@ func CreateDatBan(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo đặt bàn"})
 		return
 	}
+
+	// 🔔 GỬI MAIL SAU KHI ĐẶT BÀN THÀNH CÔNG
+	go func(email string) {
+		if err := send_mail.SendDatBanMail(email); err != nil {
+			log.Println("❌ Gửi mail thất bại:", err)
+		}
+	}(datban.Email)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Đặt bàn thành công",
