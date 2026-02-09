@@ -10,11 +10,11 @@ func DatBanRoutes(r *gin.Engine) {
 	datban := r.Group("/dat-ban")
 	{
 		// Khách
-		datban.POST("", controllers.CreateDatBan)                                                                 // tạo đặt bàn //ok
+		datban.POST("", middleware.AuthMiddleware(), controllers.CreateDatBan)                                    // tạo đặt bàn //ok
 		datban.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.GetAllDatBan) // danh sách //ok
-		datban.GET("/:id", controllers.GetDatBanByID)                                                             // chi tiết
-		datban.PUT("/:id", controllers.UpdateDatBan)                                                              // sửa thông tin
-		datban.DELETE("/:id", controllers.DeleteDatBan)                                                           //ok
+		datban.GET("/:id", middleware.AuthMiddleware(), controllers.GetDatBanByID)                                // chi tiết
+		datban.PUT("/:id", middleware.AuthMiddleware(), controllers.UpdateDatBan)                                 // sửa thông tin
+		datban.DELETE("/:id", middleware.AuthMiddleware(), controllers.DeleteDatBan)                              //ok
 
 		// Nhân viên
 		datban.PUT("/:id/xac-nhan", middleware.AuthMiddleware(), controllers.XacNhanDatBan)
