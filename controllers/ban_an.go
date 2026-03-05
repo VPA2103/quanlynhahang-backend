@@ -34,8 +34,14 @@ func CreateBanAn(c *gin.Context) {
 		return
 	}
 
-	// ✅ Tạo QR trong bộ nhớ
-	qrBytes, err := utils.GenerateQRBytes(int(ban.MaBan), ban.TenBan, ban.SoChoNgoi, ban.TrangThai)
+	// ✅ Tạo URL menu
+	menuURL := fmt.Sprintf(
+		"http://localhost:4200/#/customer/goimon/menu?table=%d",
+		ban.MaBan,
+	)
+
+	// ✅ Tạo QR
+	qrBytes, err := utils.GenerateQRBytes(menuURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã QR: " + err.Error()})
 		return
@@ -46,10 +52,16 @@ func CreateBanAn(c *gin.Context) {
 		Folder:   "banan_qr",
 		PublicID: fmt.Sprintf("qr_ban_%d", ban.MaBan),
 	})
-	if err == nil {
-		ban.Anh_QR = uploadResult.SecureURL
-		config.DB.Save(&ban)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Upload QR thất bại: " + err.Error(),
+		})
+		return
 	}
+
+	ban.Anh_QR = uploadResult.SecureURL
+	config.DB.Save(&ban)
 
 	// ✅ Upload ảnh bàn (nếu có)
 	file, err := c.FormFile("image")

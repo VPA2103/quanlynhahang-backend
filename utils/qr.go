@@ -2,30 +2,33 @@ package utils
 
 import (
 	"encoding/base64"
-	"fmt"
 
 	"github.com/skip2/go-qrcode"
 	"github.com/subiz/vietqr"
 )
 
-func GenerateQRBytes(maBan int, tenBan string, soChoNgoi int, trangThai int) ([]byte, error) {
+//func GenerateQRBytes(maBan int, tenBan string, soChoNgoi int, trangThai int) ([]byte, error) {
+//
+//	trangThaiText := "Trống"
+//	if trangThai == 1 {
+//		trangThaiText = "Có"
+//	}
+//
+//	content := fmt.Sprintf(
+//		"Tên bàn: %s\nMã bàn: %d\nSố chỗ ngồi: %d\nTrạng thái: %s",
+//		tenBan, maBan, soChoNgoi, trangThaiText,
+//	)
+//
+//	// ✅ Tạo QR code trong bộ nhớ (RAM)
+//	png, err := qrcode.Encode(content, qrcode.Medium, 256)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return png, nil
+//}
 
-	trangThaiText := "Trống"
-	if trangThai == 1 {
-		trangThaiText = "Có"
-	}
-
-	content := fmt.Sprintf(
-		"Tên bàn: %s\nMã bàn: %d\nSố chỗ ngồi: %d\nTrạng thái: %s",
-		tenBan, maBan, soChoNgoi, trangThaiText,
-	)
-
-	// ✅ Tạo QR code trong bộ nhớ (RAM)
-	png, err := qrcode.Encode(content, qrcode.Medium, 256)
-	if err != nil {
-		return nil, err
-	}
-	return png, nil
+func GenerateQRBytes(url string) ([]byte, error) {
+	return qrcode.Encode(url, qrcode.Medium, 256)
 }
 
 //amount := 12000.0
