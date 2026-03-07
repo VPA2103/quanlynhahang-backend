@@ -7,10 +7,14 @@ import (
 	"github.com/vpa/quanlynhahang-backend/services"
 )
 
-type AddMonRequest struct {
-	MaBan   uint `json:"ma_ban"`
+type MonOrder struct {
 	MaMonAn uint `json:"ma_mon_an"`
 	SoLuong int  `json:"so_luong"`
+}
+
+type AddMonRequest struct {
+	MaBan  uint       `json:"ma_ban"`
+	MonAns []MonOrder `json:"mon_ans"`
 }
 
 func AddMon(c *gin.Context) {
@@ -24,17 +28,19 @@ func AddMon(c *gin.Context) {
 		return
 	}
 
-	err := services.AddMon(req.MaBan, req.MaMonAn, req.SoLuong)
+	for _, mon := range req.MonAns {
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
+		err := services.AddMon(req.MaBan, mon.MaMonAn, mon.SoLuong)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Gọi món thành công",
 	})
-
 }
