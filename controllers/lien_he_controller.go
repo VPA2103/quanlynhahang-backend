@@ -39,6 +39,7 @@ func GuiLienHe(c *gin.Context) {
 		Content: "Có khách vừa gửi liên hệ",
 		Type:    "contact",
 	}
+
 	config.DB.Create(&noti)
 
 	// 3. Push realtime
