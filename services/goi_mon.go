@@ -37,6 +37,26 @@ func GetOrCreateHoaDon(maBan uint) (*models.HoaDon, error) {
 
 	return &hoaDon, nil
 }
+func CloseHoaDon(maBan uint) error {
+
+	var hoaDon models.HoaDon
+
+	// tìm hóa đơn đang mở
+	if err := config.DB.
+		Where("ma_ban = ? AND trang_thai = ?", maBan, 0).
+		First(&hoaDon).Error; err != nil {
+		return err
+	}
+
+	// cập nhật trạng thái
+	if err := config.DB.Model(&hoaDon).
+		Update("trang_thai", 1).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func UpdateTongTien(maHD uint) error {
 
 	var tong float64
