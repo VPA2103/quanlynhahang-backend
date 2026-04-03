@@ -33,8 +33,8 @@ func GetVietQR(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"bank_bin":   config.PaymentCfg.BankBin,
-		"account_no": config.PaymentCfg.AccountNo,
-		"qr_base64":  "data:image/png;base64," + qr,
+		//"bank_bin":   config.PaymentCfg.BankBin,
+		//"account_no": config.PaymentCfg.AccountNo,
+		"qr_base64": "data:image/png;base64," + qr,
 	})
 }
