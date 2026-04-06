@@ -8,4 +8,5 @@ type ChiTietHoaDon struct {
 	DonGia    float64
 	ThanhTien float64
 	TrangThai string
+	GhiChu    string `gorm:"type:text"`
 }
