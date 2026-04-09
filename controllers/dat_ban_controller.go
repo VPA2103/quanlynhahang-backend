@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/send_mail"
+	"github.com/vpa/quanlynhahang-backend/services/send_mail"
 )
 
 func CreateDatBan(c *gin.Context) {

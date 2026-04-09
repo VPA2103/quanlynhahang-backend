@@ -2,10 +2,8 @@ package controllers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
@@ -39,7 +37,7 @@ func Login(c *gin.Context) {
 		}
 
 		// Tạo token
-		token, err := generateToken(kh.MaKH, kh.Email, "guest")
+		token, err := utils.GenerateToken(kh.MaKH, kh.Email, "guest")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 			return
@@ -79,7 +77,8 @@ func Login(c *gin.Context) {
 		redirect = "/user/home"
 	}
 
-	token, err := generateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
+	token, err := utils.GenerateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
+	//token, err := utils.generateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
@@ -92,21 +91,6 @@ func Login(c *gin.Context) {
 		"token":    token,
 		"data":     nv,
 	})
-}
-
-// ======================================
-// ✅ Hàm tạo token JWT
-// ======================================
-func generateToken(id uint, email string, role string) (string, error) {
-	claims := jwt.MapClaims{
-		"id":    id,
-		"email": email,
-		"role":  role,
-		"exp":   time.Now().Add(24 * time.Hour).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(utils.JWTSecret())
 }
 
 func Register(c *gin.Context) {
@@ -153,7 +137,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	token, err := generateToken(newKH.MaKH, newKH.Email, "guest")
+	token, err := utils.GenerateToken(newKH.MaKH, newKH.Email, "guest")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return

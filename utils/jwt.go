@@ -15,20 +15,16 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-// ✅ Sinh token có cả quyền (role)
-func GenerateToken(userID uint, username string, role string) (string, error) {
-	claims := JWTClaims{
-		UserID:   userID,
-		Username: username,
-		Role:     role, // 🔥 gán role vào token
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // hết hạn sau 1 ngày
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+func GenerateToken(id uint, email string, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"id":    id,
+		"email": email,
+		"role":  role,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secretKey)
+	return token.SignedString(JWTSecret())
 }
 
 // ✅ Hàm dùng trong middleware để xác thực token
