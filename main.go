@@ -9,7 +9,6 @@ import (
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/routes"
-	"github.com/vpa/quanlynhahang-backend/routes/realtime"
 )
 
 func main() {
@@ -61,7 +60,7 @@ func main() {
 
 	routes.UploadRoutes(r)
 
-	realtime.WebSocketRoutes(r)
+	routes.WebSocketRoutes(r)
 
 	// 🚀 Chạy server
 	port := os.Getenv("PORT")
