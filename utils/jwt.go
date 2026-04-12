@@ -1,12 +1,35 @@
 package utils
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var secretKey = []byte("MY_SECRET_KEY")
+
+func ParseToken(r *http.Request) (uint, string, error) {
+	tokenStr := r.Header.Get("Authorization")
+
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte("SECRET_KEY"), nil
+	})
+
+	if err != nil {
+		return 0, "", err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, "", err
+	}
+
+	userID := uint(claims["user_id"].(float64))
+	role := claims["role"].(string)
+
+	return userID, role, nil
+}
 
 type JWTClaims struct {
 	UserID   uint   `json:"ma_nv"`

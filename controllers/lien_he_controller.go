@@ -6,11 +6,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/internal/dto"
+	"github.com/vpa/quanlynhahang-backend/internal/usecase"
 	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/realtime"
 )
 
-func GuiLienHe(c *gin.Context) {
+type ContactHandler struct {
+	NotiUC *usecase.NotificationUseCase
+}
+
+func (h *ContactHandler) GuiLienHe(c *gin.Context) {
 	var lienHe models.LienHe
 
 	if err := c.ShouldBind(&lienHe); err != nil {
@@ -33,17 +38,12 @@ func GuiLienHe(c *gin.Context) {
 		return
 	}
 	// thông báo realtime
-	noti := models.Notification{
-		UserID:  1, // admin
-		Title:   "Liên hệ mới",
+	// 2. Gửi thông báo qua usecase
+	h.NotiUC.Notify(dto.WSMessage{
+		Type:    "notify",
 		Content: "Có khách vừa gửi liên hệ",
-		Type:    "contact",
-	}
-
-	config.DB.Create(&noti)
-
-	// 3. Push realtime
-	realtime.PushToUser("1", noti)
+		Role:    "admin",
+	})
 
 	c.JSON(200, gin.H{
 		"message": "Gửi thành công",

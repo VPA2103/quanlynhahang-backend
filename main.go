@@ -7,6 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/internal/repository"
+	"github.com/vpa/quanlynhahang-backend/internal/usecase"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/routes"
 )
@@ -56,11 +59,35 @@ func main() {
 	}
 
 	// 🚏 Đăng ký route
-	routes.SetupRoutes(r)
 
 	routes.UploadRoutes(r)
 
-	routes.WebSocketRoutes(r)
+	//realtime
+	hub := websocket.NewHub()
+	go hub.Run()
+
+	repo := repository.NewMessageRepository(config.DB)
+	notiRepo := repository.NewNotificationRepository(config.DB)
+
+	chatUC := &usecase.ChatUseCase{
+		RT:   hub,
+		Repo: repo,
+	}
+	notiUC := &usecase.NotificationUseCase{
+		RT:   hub,
+		Repo: notiRepo,
+	}
+
+	routes.SetupRoutes(r, chatUC, notiUC)
+
+	handler := &websocket.Handler{
+		ChatUC: chatUC,
+		NotiUC: notiUC,
+	}
+
+	r.GET("/ws", func(c *gin.Context) {
+		websocket.HandleWS(hub, handler)(c.Writer, c.Request)
+	})
 
 	// 🚀 Chạy server
 	port := os.Getenv("PORT")
