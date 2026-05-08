@@ -62,6 +62,9 @@ func main() {
 
 	routes.UploadRoutes(r)
 
+	//chat ai
+	routes.AIChatRoute(r)
+
 	//realtime
 	hub := websocket.NewHub()
 	go hub.Run()
